@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公历农历互转工具</title>
+    <!-- 引入专业的农历转换库 -->
+<!--    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>-->
+    <script src="src/lunar-min.js"></script>
+    <script src="dist/js-calendar-converter.js"></script>
+    <style>
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+        .converter-box {
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px dashed #e0e0e0;
+        }
+        .converter-box:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input {
+            flex: 1;
+            padding: 12px 15px;
+            font-size: 15px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        input:focus {
+            border-color: #40a9ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 15px;
+            background-color: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #40a9ff;
+        }
+        button:active {
+            background-color: #096dd9;
+        }
+        .result {
+            padding: 15px;
+            background-color: #f6ffed;
+            border: 1px solid #b7eb8f;
+            border-radius: 6px;
+            color: #389e0d;
+            font-size: 14px;
+            line-height: 1.6;
+            display: none; /* 默认隐藏 */
+        }
+        .result.error {
+            background-color: #fff2f0;
+            border-color: #ffccc7;
+            color: #cf1322;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📅 公历农历互转工具</h2>
+
+    <!-- 区域1：公历转农历 -->
+    <div class="converter-box">
+        <div class="input-group">
+            <input type="text" id="solarInput" placeholder="请录入公历日期(yyyy-MM-dd)">
+            <button onclick="convertSolarToLunarJS()">转农历LunarJS</button>
+            <button onclick="convertSolarToLunarCalendarJS()">转农历CalendarJS</button>
+        </div>
+        <div id="solarResult" class="result"></div>
+    </div>
+
+    <!-- 区域2：农历转公历 -->
+    <div class="converter-box">
+        <div class="input-group">
+            <input type="text" id="lunarInput" placeholder="请录入农历日期(yyyy-MM-dd)">
+            <button onclick="convertLunarToSolarJS()">转公历LunarJS</button>
+            <button onclick="convertLunarToSolarCalendarJS()">转公历CalendarJS</button>
+        </div>
+        <div id="lunarResult" class="result"></div>
+    </div>
+</div>
+
+<script>
+
+
+
+    // 提取并校验日期的辅助函数
+    function extractDate(inputValue) {
+        const dateRegex = /^(\d{4})-(\d{2})-(\d{2})$/;
+        const match = inputValue.trim().match(dateRegex);
+        if (!match) return null;
+        return {
+            year: parseInt(match[1], 10),
+            month: parseInt(match[2], 10),
+            day: parseInt(match[3], 10)
+        };
+    }
+
+    // 显示结果的辅助函数
+    function showResult(elementId, htmlContent, isError = false) {
+        const el = document.getElementById(elementId);
+        el.innerHTML = htmlContent;
+        el.style.display = 'block';
+        if (isError) {
+            el.classList.add('error');
+        } else {
+            el.classList.remove('error');
+        }
+    }
+
+    // 1. 公历转农历LunarJS
+    function convertSolarToLunarJS() {
+        const inputVal = document.getElementById('solarInput').value;
+        const date = extractDate(inputVal);
+        if (!date) {
+            showResult('solarResult', '⚠️ 格式错误！请严格按照 yyyy-MM-dd 格式输入。', true);
+            return;
+        }
+        try {
+            // const solar = Solar.fromYmd(date.year, date.month, date.day);
+            const solar = Solar.fromYmdHms(date.year, date.month, date.day, 23,10,0);
+
+
+
+            const lunar = solar.getLunar();
+
+            const resultHtml = `
+                    <span class="label">转换结果：</span><br>
+                    农历：${lunar.toString()}<br>
+                    干支：${lunar.getYearInGanZhi()}年 【${lunar.getYearShengXiao()}】<br>
+
+                    干支：${lunar.getYearInGanZhi()}年 ${lunar.getMonthInGanZhi()}月 ${lunar.getDayInGanZhi()}日  ${lunar.getTimeInGanZhi()}时 <br>
+                    干支：${lunar.getYearInGanZhiExact()}年 ${lunar.getMonthInGanZhiExact()}月 ${lunar.getDayInGanZhiExact()}日  ${lunar.getTimeInGanZhi()}时 <br>
+
+
+
+                    节气：${lunar.getJieQi() || '无'} &nbsp; 节日：${lunar.getFestivals().join(' ') || '无'}
+                `;
+            showResult('solarResult', resultHtml);
+        } catch (e) {
+            showResult('solarResult', '❌ 转换失败，请检查输入的公历日期是否合法。', true);
+        }
+    }
+
+    // 1. 公历转农历convertSolarToLunarCalendarJS
+    function convertSolarToLunarCalendarJS() {
+        const inputVal = document.getElementById('solarInput').value;
+        const date = extractDate(inputVal);
+        if (!date) {
+            showResult('solarResult', '⚠️ 格式错误！请严格按照 yyyy-MM-dd 格式输入。', true);
+            return;
+        }
+        try {
+            const calendarJson = calendar.solar2lunar(date.year, date.month, date.day)
+            // const calendarstr = JSON.stringify(calendarJson, null, 4);
+            //第二个参数是让null节点不显示
+            const calendarstr = JSON.stringify(calendarJson, (key, value) => {
+                return value === null ? undefined : value;
+            }, 4);
+            const resultHtml = `
+                    <span class="label">转换结果：</span><br>
+                    <pre>${calendarstr.toString()}</pre>
+                `;
+            showResult('solarResult', resultHtml);
+        } catch (e) {
+            showResult('solarResult', '❌ 转换失败，请检查输入的公历日期是否合法。', true);
+        }
+    }
+
+    // 2. 农历转公历
+    function convertLunarToSolarJS() {
+        const inputVal = document.getElementById('lunarInput').value;
+        const date = extractDate(inputVal);
+        if (!date) {
+            showResult('lunarResult', '⚠️ 格式错误！请严格按照 yyyy-MM-dd 格式输入。', true);
+            return;
+        }
+        try {
+            const lunar = Lunar.fromYmd(date.year, date.month, date.day);
+            const solar = lunar.getSolar();
+            const resultHtml = `
+                    <span class="label">转换结果：</span><br>
+                    公历：${solar.toFullString()}<br>
+                    星期：${solar.getWeekInChinese()}<br>
+                    星座：${solar.getXingZuo()}座
+                `;
+            showResult('lunarResult', resultHtml);
+        } catch (e) {
+            showResult('lunarResult', '❌ 转换失败，请检查输入的农历日期是否合法（例如农历没有2月30日）。', true);
+        }
+    }
+
+    // 2. 农历转公历 convertLunarToSolarCalendarJS
+    function convertLunarToSolarCalendarJS() {
+        const inputVal = document.getElementById('lunarInput').value;
+        const date = extractDate(inputVal);
+        if (!date) {
+            showResult('lunarResult', '⚠️ 格式错误！请严格按照 yyyy-MM-dd 格式输入。', true);
+            return;
+        }
+        try {
+            const calendarJson = calendar.lunar2solar(date.year, date.month, date.day)
+            // const calendarstr = JSON.stringify(calendarJson, null, 4);
+            //第二个参数是让null节点不显示
+            const calendarstr = JSON.stringify(calendarJson, (key, value) => {
+                return value === null ? undefined : value;
+            }, 4);
+            const resultHtml = `
+                    <span class="label">转换结果：</span><br>
+                    <pre>${calendarstr.toString()}</pre>
+                `;
+            showResult('lunarResult', resultHtml);
+        } catch (e) {
+            showResult('lunarResult', '❌ 转换失败，请检查输入的农历日期是否合法（例如农历没有2月30日）。', true);
+        }
+    }
+
+
+    //set default value
+    document.getElementById('solarInput').value='1987-11-01';
+    document.getElementById('lunarInput').value='1987-09-10';
+</script>
+</body>
+</html>
